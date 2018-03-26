@@ -1,0 +1,12 @@
+<h1>All the actions</h1>
+<div>
+<%	actions.forEach(function(action){ %>
+		<p> 
+		<h4> <%= action.title %> </h4>
+		<li> <%= action.topic %> </li>
+		<li> <%= action.pubDate.toDateString() %> </li>
+		<a href="/actions/<%= action._id %>">Read More</a>
+		<a href="/actions/<%= action._id %>/edit">Update Action</a>
+		</p>
+<%	}); %>
+</div>

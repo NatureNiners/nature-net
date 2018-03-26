@@ -1,0 +1,16 @@
+<h1>Edit <%= foundAction.title %>  Action</h1>
+<div>
+<form action="/actions/<%= foundAction._id %>?_method=PUT" method="POST">
+Title: <input type="text" name="action[title]" value="<%= foundAction.title %>"> <br>
+Content: <input type="text" name="action[content]" value="<%- foundAction.content %>"> <br>
+<p>Please change <%= foundAction.topic %> category to:</p>
+<select name="action[topic]">
+<option value="Climate"> Climate </option>
+<option value="Land">Land </option>
+<option value="Water"> Water </option>
+<option value="Waterfall"> Waterfall </option>
+</select>
+Date: <input type="text" name="name[pubDate]" value="<%= foundAction.pubDate.toDateString() %>"> <br>
+<button>Submit</button>
+</form>
+</div>

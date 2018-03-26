@@ -1,0 +1,14 @@
+<h1><%= action.title %> Action</h1>
+<div>
+<p>
+<%= action.topic %>
+
+<%= action.pubDate.toDateString() %>
+
+<%- action.content %>
+</p>
+<form action="/actions/<%= action._id %>?_method=DELETE" method="POST"> 
+<button>Delete</button>
+</form>
+
+</div>
