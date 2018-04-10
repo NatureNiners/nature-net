@@ -1,0 +1,14 @@
+<h1>Your Action</h1>
+<div>
+<p>
+<%	userActions.posts.forEach(function(post){ %>
+		<p> 
+		<h4> <%= userActions.posts.title %> </h4>
+		<li> <%= userActions.posts.topic %> </li>
+		</p>
+<%	}); %>
+<form action="/actions/<%= userActions._id %>?_method=DELETE" method="POST"> 
+<button>Delete</button>
+</form>
+
+</div>

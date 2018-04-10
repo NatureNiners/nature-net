@@ -14,6 +14,10 @@ var userSchema= new mongoose.Schema({
 	posts: [{
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "Action"
+	}],
+	comments: [{
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Comment"
 	}]
 });
 
