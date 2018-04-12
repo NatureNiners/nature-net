@@ -6,11 +6,15 @@ var Action= require('./models/Action');
 var Comment= require('./models/Comment');
 var Event= require('./models/Event');
 var methodOverride= require('method-override');
+
 var async= require('async');
+
 var passport= require('passport');
 var localStrategy= require('passport-local');
 var passportLocalMongoose = require('passport-local-mongoose');
-//var expressSession= require('express-session');
+
+var nodemailer= require('nodemailer');
+
 
 module.exports = app;
 
@@ -31,6 +35,38 @@ app.use(passport.session());
 passport.use(new localStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+// var readHTMLFile = function(path, callback) {
+//     fs.readFile(path, {encoding: 'utf-8'}, function (err, html) {
+//         if (err) {
+//             throw err;
+//             callback(err);
+//         }
+//         else {
+//             callback(null, html);
+//         }
+//     });
+// };
+
+// smtpTransport = nodemailer.createTransport(smtpTransport({
+//     service:'gmail',
+//     auth: {
+//         user: 'natureniners@gmail.com',
+//         pass: 'ITis@6177'
+//     }
+// }));
+
+
+
+
+var transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'natureniners@gmail.com',
+    pass: 'ITis@6177'
+  }
+});
+
 
 app.get("/users/new",function(req,res){
 	res.render("register.ejs");
@@ -63,8 +99,22 @@ if(err){
 	console.log(err);
 	return res.redirect("/register");
 }
-// passport.authenticate("local")(req,res,function(){
-	//res.status(200).json(user);
+
+
+var mailOptions = {
+  							from: 'natureniners@gmail.com',
+  							to: email,
+  							subject: 'Welcome to Nature Niners',
+  							html:'<p>Greetings from Nature Niners,</p><p>Thank you for signing up for Natre Niners application. Nature Niners is a citizen Science community where you can contribute to the nature by participating in various events and supporting different causes.To See a list of current actions, <a href="http://localhost:3000/actions">Click here.</a></p><p>Welcome to the community!</p><p>--The Nature Niners Team</p>'
+							};
+		transporter.sendMail(mailOptions, function(error, info){
+  			if (error) {
+    					console.log(error);
+  			} else {
+    					console.log('Email sent: ' + info.response);
+  			}
+			});
+
 	res.redirect("/login");
 	console.log(user);
 // });
@@ -125,7 +175,7 @@ app.get("/actions/new",function(req,res){
 	res.render("createAction.ejs");
 });
 
-app.post("/actions",checkAuthor, function(req,res){
+app.post("/actions",isLoggedIn, function(req,res){
 	var Title= req.body.title;
 	var	Topic= req.body.topic;
 	var Content= req.body.content;
@@ -369,6 +419,45 @@ Action.findById(req.params.id).populate("comments").exec(function(err,Events){
 		}
 	});
 });
+
+app.get("/newsletter/actions",function(req,res){
+	var days=1;
+	var date= new Date();
+	var last= new Date(date.getTime() - (days * 24 * 60 * 60 * 1000));
+	// var day =last.getDate();
+	// var month=last.getMonth()+1;
+	// var year=last.getFullYear();
+	console.log(last);
+	Action.find({},function(req,actions){
+		var news= new Array();
+		async.each(actions,function(action,callback){
+			if(action.pubDate < date && action.pubDate> last){
+			console.log("its here!");
+			//console.log(action);
+			news.push(action);
+			
+			//console.log(action.newsletter);
+			
+				
+		}
+
+		
+	});	
+		for(let i = 0, l = news.length; i < l; i++) {
+		var news_content= new Array(); 
+		news_content= {
+			title: news[i].title,
+			content: news[i].content,
+			id: news[i]._id
+		}
+		console.log(news_content);
+	}
+		res.json(news);
+		});	
+		
+});
+
+
 
 app.get("/home",function(req,res){
 	res.send("Welcome");
