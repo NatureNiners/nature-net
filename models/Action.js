@@ -10,6 +10,14 @@ var actionSchema= new mongoose.Schema({
 	startTime: String,
 	endTime: String,
 	likes_Count: Number,
+	expLikes: Number,
+	author:{
+		id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "User"
+	},
+	username: String
+	},
 	comments: [{
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "Comment"
