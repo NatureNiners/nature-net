@@ -376,16 +376,6 @@ Action.findById(req.params.id).populate("comments").exec(function(err,Events){
 	});
 });
 
-// var days=1;
-// 	var date= new Date();
-// 	var day =date.getDate();
-// 	var month=date.getMonth();
-// 	var year=date.getFullYear();
-// var date1 = new Date(year, month, day, 17, 30, 0);
-// console.log("Hello "+date1);
-// var j = schedule.scheduleJob(date1, function(){	
-//   console.log('Mail functionality');
-// });
 
 app.get("/newsletter/actions",function(req,res){
 	var days=1;
@@ -402,16 +392,6 @@ app.get("/newsletter/actions",function(req,res){
 		}
 		
 	});	
-	// 	for(let i = 0, l = news.length; i < l; i++) {
-	// 	var news_content= new Array(); 
-	// 	news_content= {
-	// 		title: news[i].title,
-	// 		content: news[i].content,
-	// 		id: news[i]._id
-	// 	}
-	// 	console.log(news_content);
-	// }
-	//res.json(news);
 		res.render("email.ejs",{Content: news});
 		});	
 		
@@ -427,22 +407,31 @@ app.get("/newsletter/actions",function(req,res){
 
     var deffered = Q.defer();
 
-	var days=1;
+	// var days=0;
 	var date= new Date();
 	var day =date.getDate();
 	var month=date.getMonth();
 	var year=date.getFullYear();
-	var date1 = new Date(year, month, day, 13,30, 0);
-
+	var date1 = new Date(year, month, day, 14,31, 50);
+	var subscriptionPeriod ={ Daily: 'Daily', Weekly: 'Weekly', Monthly: 'Monthly'};
  	var job= schedule.scheduleJob(date1,function(){
  	let templateData= {
  		name: 'Test Data'
  	};
-
- 	User.find({'subscription': 'Monthly'},function(err, user){
-    var users = [];
+	for(var day in subscriptionPeriod){
+		type= subscriptionPeriod[day];
+		switch(type){
+			case 'Daily': days= 1; break;
+			case 'Weekly': days= 7; break;
+			case 'Monthly': days= 30; break;
+		}
+		console.log("days is"+ days);
+		console.log(type);
+	
+ 		User.find({'subscription': type},function(err, user){
+    	var users = [];
     // handle error
-    if (err) {
+    	if (err) {
       deffered.reject(console.log('failed: ' + err));
     } else {
       // add all qualifying users to the users array
@@ -490,6 +479,7 @@ app.get("/newsletter/actions",function(req,res){
 			}
   			});
 		});
+	}
  });
 
 app.get("/home",function(req,res){
