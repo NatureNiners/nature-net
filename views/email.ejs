@@ -1,0 +1,11 @@
+<h1>All the actions for newsletter</h1>
+<div>
+<%	Content.forEach(function(eachaction){ %>
+		<p> 
+		<h4> <%= eachaction.title %> </h4>
+				<li> <%= eachaction.topic %> </li>
+
+		<li> <%= eachaction.content %> </li>
+		</p>
+<%	}); %>
+</div>

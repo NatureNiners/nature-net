@@ -16,6 +16,16 @@ var passportLocalMongoose = require('passport-local-mongoose');
 var nodemailer= require('nodemailer');
 
 
+var schedule= require('node-schedule');
+mailgun_api = process.env.MAILGUN_API_KEY,
+mailgun_domain = process.env.MAILGUN_DOMAIN,
+Mailgun = require('mailgun-js'),
+Q = require('q'),
+moment = require('moment'),
+nunjucks = require('nunjucks');
+
+var ejs= require('ejs');
+
 module.exports = app;
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -35,28 +45,6 @@ app.use(passport.session());
 passport.use(new localStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
-
-// var readHTMLFile = function(path, callback) {
-//     fs.readFile(path, {encoding: 'utf-8'}, function (err, html) {
-//         if (err) {
-//             throw err;
-//             callback(err);
-//         }
-//         else {
-//             callback(null, html);
-//         }
-//     });
-// };
-
-// smtpTransport = nodemailer.createTransport(smtpTransport({
-//     service:'gmail',
-//     auth: {
-//         user: 'natureniners@gmail.com',
-//         pass: 'ITis@6177'
-//     }
-// }));
-
-
 
 
 var transporter = nodemailer.createTransport({
@@ -81,18 +69,7 @@ var	phone= req.body.phone;
 var	subscription= req.body.subscription;
 var	dob= req.body.dob;
 var username= req.body.username;
-//var Users= [{firstName,lastName,email,phone,subscription,dob,username}];
-// User.create(Users,function(err,newUser){
-// 	if(err){
-// 		res.status(500).send(err);
-// 		console.log("Couldn't insert the user");
-// 	} 
-// 	else{
-// 		res.status(201).json(newUser);
-// 		console.log("Sucessfully inserted:" +newUser);
-// 		//res.redirect("/login");
-// 	}
-// });
+
 var newUser= new User({username: username,firstName: firstName, lastName: lastName, email: email,phone: phone,subscription:subscription,dob: dob});
 User.register(newUser,password, function(err,user){
 if(err){
@@ -129,27 +106,6 @@ app.post("/login",passport.authenticate("local",{
 	successRedirect: "/home",
 	failureRedirect: "/login"
 }),function(req,res){
-	// var	Email= req.body.email;
-	// var	Password= req.body.password;
-	// console.log(Email);
-	// console.log(Password);
-	// User.findOne({email: Email},function(err,foundUser){
-	// 	if(err){
-	// 	res.status(500).send(err);
-	// 	console.log("This error is thrown "+err);
-	// } 
-	// else{
-	// 	console.log("FoundUser:" +foundUser);
-	// 	if(foundUser.password === Password){
-	// 		console.log("login successful");
-	// 		res.status(200).json(foundUser);
-	// 		//res.redirect("/actions/new");
-	// 	} else{
-	// 		res.status(200).send("Invalid Credentials");
-	// 		console.log("login failed");	
-	// }
-	// }
-	// });
 });
 
 app.get("/logout",function(req,res){
@@ -420,13 +376,21 @@ Action.findById(req.params.id).populate("comments").exec(function(err,Events){
 	});
 });
 
+// var days=1;
+// 	var date= new Date();
+// 	var day =date.getDate();
+// 	var month=date.getMonth();
+// 	var year=date.getFullYear();
+// var date1 = new Date(year, month, day, 17, 30, 0);
+// console.log("Hello "+date1);
+// var j = schedule.scheduleJob(date1, function(){	
+//   console.log('Mail functionality');
+// });
+
 app.get("/newsletter/actions",function(req,res){
 	var days=1;
 	var date= new Date();
 	var last= new Date(date.getTime() - (days * 24 * 60 * 60 * 1000));
-	// var day =last.getDate();
-	// var month=last.getMonth()+1;
-	// var year=last.getFullYear();
 	console.log(last);
 	Action.find({},function(req,actions){
 		var news= new Array();
@@ -434,30 +398,99 @@ app.get("/newsletter/actions",function(req,res){
 			if(action.pubDate < date && action.pubDate> last){
 			console.log("its here!");
 			//console.log(action);
-			news.push(action);
-			
-			//console.log(action.newsletter);
-			
-				
+			news.push(action);						
 		}
-
 		
 	});	
-		for(let i = 0, l = news.length; i < l; i++) {
-		var news_content= new Array(); 
-		news_content= {
-			title: news[i].title,
-			content: news[i].content,
-			id: news[i]._id
-		}
-		console.log(news_content);
-	}
-		res.json(news);
+	// 	for(let i = 0, l = news.length; i < l; i++) {
+	// 	var news_content= new Array(); 
+	// 	news_content= {
+	// 		title: news[i].title,
+	// 		content: news[i].content,
+	// 		id: news[i]._id
+	// 	}
+	// 	console.log(news_content);
+	// }
+	//res.json(news);
+		res.render("email.ejs",{Content: news});
 		});	
 		
 });
 
 
+//####### 
+
+//E-mail Functionality 
+
+//#########
+
+
+    var deffered = Q.defer();
+
+	var days=1;
+	var date= new Date();
+	var day =date.getDate();
+	var month=date.getMonth();
+	var year=date.getFullYear();
+	var date1 = new Date(year, month, day, 13,30, 0);
+
+ 	var job= schedule.scheduleJob(date1,function(){
+ 	let templateData= {
+ 		name: 'Test Data'
+ 	};
+
+ 	User.find({'subscription': 'Monthly'},function(err, user){
+    var users = [];
+    // handle error
+    if (err) {
+      deffered.reject(console.log('failed: ' + err));
+    } else {
+      // add all qualifying users to the users array
+      for (var i = user.length - 1; i >= 0; i--) {        
+        users.push(user[i]);
+        console.log(users);
+      }  
+      deffered.resolve(users);
+    }    
+  });
+ 		var news= [];
+		var last= new Date(date.getTime() - (days * 24 * 60 * 60 * 1000));
+		console.log(last);
+			Action.find({},function(req,actions){
+    		for(i=0; i<actions.length; i++){
+    			if(actions[i].pubDate < date && actions[i].pubDate> last){
+					news.push(actions[i]);						
+				}
+    		}
+  			ejs.renderFile('views/email.ejs', {Content: news}, (err, content)=> {
+  				if(err){
+  					console.log(err);
+  				}
+  				else{
+  					User.find({'subscription': 'Yearly'},function(err,user){
+  					for(var i = user.length - 1; i >= 0; i--){
+
+  					var mailOptions = {
+  							from: 'natureniners@gmail.com',
+  							to: user[i].email,
+  							subject: 'Latest Actions',
+  							html: content
+							};
+			transporter.sendMail(mailOptions, function(error, info){
+  			if (error) {
+    					deffered.reject(console.log('failed: ' + err));
+  			} else {
+    					deffered.resolve(body)
+    					console.log('Email sent: ' + info.response);
+  			}
+			});
+
+			}
+  					});
+			}
+  			});
+		});
+ });
 
 app.get("/home",function(req,res){
 	res.send("Welcome");
